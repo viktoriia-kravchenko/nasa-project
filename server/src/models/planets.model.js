@@ -2,8 +2,7 @@ import { createReadStream } from "node:fs";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { parse } from "csv-parse";
-
-const habitableExoplanets = [];
+import Planet from "./planets.mongo.js";
 
 const parser = parse({
   columns: true,
@@ -25,17 +24,31 @@ const loadPlanets = async () => {
       parser,
       async (data) => {
         for await (const chunk of data) {
-          if (isHabitableExoplanet(chunk)) habitableExoplanets.push(chunk);
+          if (isHabitableExoplanet(chunk)) await savePlanetToDB(chunk);
         }
       },
     );
   } catch (err) {
     console.error(err);
   } finally {
-    console.log(`We found ${habitableExoplanets.length} habitable exoplanets`);
+    const allPlanets = await getAllPlanets();
+
+    console.log(`We found ${allPlanets.length} habitable exoplanets`);
   }
 };
 
-const getAllPlanets = () => habitableExoplanets;
+const getAllPlanets = async () => await Planet.find({}).select("-_id -__v");
+
+const savePlanetToDB = async (planet) => {
+  try {
+    return await Planet.updateOne(
+      { keplerName: planet.kepler_name },
+      { keplerName: planet.kepler_name },
+      { upsert: true },
+    );
+  } catch (err) {
+    console.error(`There's an error while saving a planet: ${err}`);
+  }
+};
 
 export { loadPlanets, getAllPlanets };
