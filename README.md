@@ -17,6 +17,10 @@ nasa-project/
         │   ├── planets.mongo.js   # Mongoose schema for the `planets` collection
         │   └── planets.model.js   # Planet persistence/query logic + CSV seeding
         ├── routes/                # Express routers + controllers (launches, planets)
+        │   └── launches/
+        │       └── launches.test.js  # API tests for the launches routes (Jest + Supertest)
+        ├── services/
+        │   └── mongo.js           # Mongoose connect/disconnect helpers, shared by the server and the test suite
         ├── app.js                 # Express app configuration
         └── server.js              # Entry point: opens the MongoDB connection, then starts the HTTP server
 ```
@@ -64,6 +68,27 @@ On boot, `server.js` establishes the Mongoose connection and waits for the plane
 | `npm run server` | Start only the backend with nodemon |
 | `npm run client` | Start only the React dev server |
 | `npm run deploy` | Build the React app and start the production server |
+
+## Testing
+
+API tests for the launches routes live in `server/src/routes/launches/launches.test.js`, written with **Jest** and **Supertest** against the real Express `app` instance. They cover:
+
+- `GET /launches` — returns the list of scheduled launches
+- `POST /launches` — creates a launch, and rejects it with `400` when a required field is missing or the date is invalid
+
+The suite connects to the same MongoDB Atlas database as the dev server (via `server/src/services/mongo.js`), so `server/.env` must be set up before running it.
+
+Run from `server/`:
+
+```bash
+npm test
+```
+
+or in watch mode:
+
+```bash
+npm run test-watch
+```
 
 ## Development
 
